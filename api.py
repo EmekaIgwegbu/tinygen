@@ -14,11 +14,11 @@ app = FastAPI()
 openai.api_key = os.getenv("OPENAI_API_KEY")
 
 # Supabase configuration
-SUPABASE_URL = os.getenv("SUPABASE_URL", "https://your-project-ref.supabase.co")
-SUPABASE_KEY = os.getenv("SUPABASE_KEY", "your-anon-key")
+supabase_url = os.getenv("SUPABASE_URL", "https://your-project-ref.supabase.co")
+supabase_key = os.getenv("SUPABASE_KEY", "your-anon-key")
 
 # Create Supabase client
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+supabase: Client = create_client(supabase_url, supabase_key)
 
 
 class Result(BaseModel):
