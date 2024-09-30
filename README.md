@@ -18,9 +18,8 @@ pip install -r requirements.txt
 ```
 
 ### 3. Environment
-You'll need to define the following environment variables in a .env file at the root of this repo:
+You'll need to define the following secrets in a .env.secrets file at the root of this repo:
 - OPENAI_API_KEY
-- SUPABASE_URL
 - SUPABASE_KEY
 
 Reach out to emeka.igwegbu@gmail.com for these secrets.
