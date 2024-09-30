@@ -3,6 +3,7 @@ import hashlib
 import logging
 import os
 from urllib.parse import urlparse
+from tinygen.exceptions.repo_error import RepoError
 
 logger = logging.getLogger(__name__)
 
@@ -24,11 +25,6 @@ CODE_FILE_EXTENSIONS = {
 IGNORED_DIRECTORIES = {"node_modules", "vendor", ".git", "build", "dist"}
 
 
-class RepoError(Exception):
-    def __init__(self, message):
-        super().__init__(f"{message}: {self.repo_url}")
-
-
 class Repo:
     def __init__(self, repo_url):
         self.repo_url = repo_url
@@ -37,7 +33,8 @@ class Repo:
         self.repo_dir = f"./repos/{os.path.basename(repo_url).split('.')[0]}_{url_hash}"
         self.repo = self.pull_latest(repo_url, self.repo_dir)
 
-    def __ignore_dir_path(self, dir_path: str) -> bool:
+    @staticmethod
+    def __ignore_dir_path(dir_path: str) -> bool:
         _, dir_name = os.path.split()
         print(f"dir_path is {dir_path}")
         print(f"dir_name is {dir_name}")
@@ -69,7 +66,8 @@ class Repo:
     #     skip_folders = ["node_modules", "vendor", ".git", "build", "dist"]
     #     return any(folder in relative_path for folder in skip_folders)
 
-    def is_code_file(self, file_path: str) -> bool:
+    @staticmethod
+    def is_code_file(file_path: str) -> bool:
         # Check if the file has a valid code extension
         _, ext = os.path.splitext(file_path)
         return ext in CODE_FILE_EXTENSIONS
@@ -79,7 +77,7 @@ class Repo:
         file_content = {}
 
         for dir_path, sub_dir_names, file_names in os.walk(self.repo_dir):
-            if self.__ignore_dir_path(dir_path):
+            if Repo.__ignore_dir_path(dir_path):
                 continue
 
             for file in file_names:

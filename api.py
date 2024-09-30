@@ -8,7 +8,7 @@ from supabase import create_client, Client
 from fastapi.responses import JSONResponse
 from dotenv import load_dotenv
 from tinygen.enums.tinygen_environments import TinygenEnvironment
-from tinygen.entities.queries import Query
+from tinygen.entities.queries import Query, Queries
 from tinygen.helpers.assistant import Assistant
 from tinygen.helpers.environment import getenv
 from tinygen.helpers.repo import Repo
@@ -30,7 +30,9 @@ supabase_key = getenv("SUPABASE_KEY")
 
 tinygen_api_port = int(getenv("TINYGEN_API_PORT", 8000))
 
-supabase: Client = create_client(supabase_url, supabase_key)
+supabase_client: Client = create_client(supabase_url, supabase_key)
+
+queries: Queries = Queries(supabase_client)
 
 assistant: Assistant = Assistant()
 
@@ -47,6 +49,10 @@ logging.basicConfig(
 
 # TODO: consider changing '__name__' to something else
 logger = logging.getLogger(__name__)
+
+
+def setup():
+    raise NotImplementedError
 
 
 class PromptRequest(BaseModel):
