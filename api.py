@@ -2,7 +2,8 @@
 # import shutil
 import uvicorn
 import logging
-from fastapi import FastAPI, HTTPException
+import openai
+from fastapi import FastAPI, Depends, HTTPException
 from pydantic import BaseModel
 from supabase import create_client, Client
 from fastapi.responses import JSONResponse
@@ -15,44 +16,12 @@ from tinygen.helpers.repo import Repo
 
 app = FastAPI()
 
-# TODO: Make all this configuration neater. An init function?
-load_dotenv()
-load_dotenv(dotenv_path=".env.secrets")
 
-
-tinygen_env = getenv("TINYGEN_ENVIRONMENT", default=TinygenEnvironment.Production)
-if tinygen_env == TinygenEnvironment.Development:
-    load_dotenv(dotenv_path=".env.development", override=True)
-
-# Supabase configuration
-supabase_url = getenv("SUPABASE_URL")
-supabase_key = getenv("SUPABASE_KEY")
-
-tinygen_api_port = int(getenv("TINYGEN_API_PORT", 8000))
-
-supabase_client: Client = create_client(supabase_url, supabase_key)
-
-queries: Queries = Queries(supabase_client)
-
-assistant: Assistant = Assistant()
-
-# Logging configuration
-log_level = getenv("LOG_LEVEL", logging.INFO).upper()
-logging.basicConfig(
-    level=log_level,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",  # Log format
-    handlers=[
-        logging.FileHandler("api.log"),
-        logging.StreamHandler(),
-    ],
-)
-
-# TODO: consider changing '__name__' to something else
-logger = logging.getLogger(__name__)
-
-
-def setup():
-    raise NotImplementedError
+class ServiceDependencies:
+    def __init__(self, assistant: Assistant, queries: Queries, logger: logging.Logger):
+        self.assistant = assistant
+        self.queries = queries
+        self.logger = logger
 
 
 class PromptRequest(BaseModel):
@@ -61,8 +30,48 @@ class PromptRequest(BaseModel):
     file_paths: list[str] | None = None  # Specific file paths to modify
 
 
+def configure_service() -> ServiceDependencies:
+    tinygen_environment = getenv(
+        "TINYGEN_ENVIRONMENT", default=TinygenEnvironment.Production
+    )
+
+    # Load environment variables and secrets from .env files
+    load_dotenv()
+    load_dotenv(dotenv_path=".env.secrets")
+    if tinygen_environment == TinygenEnvironment.Development:
+        load_dotenv(dotenv_path=".env.development", override=True)
+
+    # Configure openai client
+    openai.api_key = getenv("OPENAI_API_KEY")
+
+    # Configure supabase db client
+    supabase_url = getenv("SUPABASE_URL")
+    supabase_key = getenv("SUPABASE_KEY")
+    supabase_client: Client = create_client(supabase_url, supabase_key)
+
+    # Configure logging
+    log_level = getenv("LOG_LEVEL", logging.INFO).upper()
+    logging.basicConfig(
+        level=log_level,
+        format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",  # Log format
+        handlers=[
+            logging.FileHandler("api.log"),
+            logging.StreamHandler(),
+        ],
+    )
+
+    # Instantiate dependencies
+    assistant = Assistant()
+    logger = logging.getLogger(__name__)
+    queries = Queries(supabase_client)
+
+    return ServiceDependencies(assistant, queries, logger)
+
+
 # TODO: Consider refactoring this somewhere else
-def get_diff(original_file_content: dict, user_prompt: str) -> str:
+def get_diff(
+    original_file_content: dict, user_prompt: str, assistant: Assistant
+) -> str:
     file_text = "\n\n".join(
         [
             f"### {file_name}\n{content}"
@@ -94,10 +103,18 @@ def get_diff(original_file_content: dict, user_prompt: str) -> str:
 
 # TODO: Include any HTTPExceptions?
 @app.post("/generate_diff")
-async def generate_diff_for_repo(request: PromptRequest):
+async def generate_diff_for_repo(
+    request: PromptRequest,
+    dependencies: ServiceDependencies = Depends(configure_service),
+):
+    assistant = dependencies.assistant
+    queries = dependencies.queries
+
     # repo_dir = f"./repos/{os.path.basename(request.repoUrl).split('.')[0]}"
 
     # TODO: Store inputs and outputs
+    queries.insert()
+
     repo = Repo(request.repoUrl)
 
     # Clean up any previous repository with the same name
@@ -108,7 +125,7 @@ async def generate_diff_for_repo(request: PromptRequest):
 
     file_content = repo.read_files(request.file_paths)
 
-    generated_diff = get_diff(file_content, request.prompt)
+    generated_diff = get_diff(file_content, request.prompt, assistant)
 
     # Clean up repo after use
     # shutil.rmtree(repo.repo_dir)
@@ -117,4 +134,4 @@ async def generate_diff_for_repo(request: PromptRequest):
 
 
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=tinygen_api_port)
+    uvicorn.run(app, host="0.0.0.0", port=int(getenv("TINYGEN_API_PORT", 8000)))
