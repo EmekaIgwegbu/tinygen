@@ -25,14 +25,14 @@ class ServiceDependencies:
 
 
 class PromptRequest(BaseModel):
-    repoUrl: str  # consider changing this to snakecase and figuring out how to convert between the two cases
+    repoUrl: str
     prompt: str
-    file_paths: list[str] | None = None  # Specific file paths to modify
 
 
 def configure_service() -> ServiceDependencies:
-    tinygen_environment = getenv(
-        "TINYGEN_ENVIRONMENT", default=TinygenEnvironment.Production
+    # TODO: Will have to figure out where to set this env var
+    tinygen_environment = TinygenEnvironment(
+        getenv("TINYGEN_ENVIRONMENT", default=TinygenEnvironment.Production.value)
     )
 
     # Load environment variables and secrets from .env files
@@ -49,16 +49,18 @@ def configure_service() -> ServiceDependencies:
     supabase_key = getenv("SUPABASE_KEY")
     supabase_client: Client = create_client(supabase_url, supabase_key)
 
-    # Configure logging
-    log_level = getenv("LOG_LEVEL", logging.INFO).upper()
+    # Configure global root logger
     logging.basicConfig(
-        level=log_level,
+        level=logging.INFO,
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",  # Log format
         handlers=[
-            logging.FileHandler("api.log"),
+            logging.FileHandler("app.log"),
             logging.StreamHandler(),
         ],
     )
+
+    # Configure tinygen root logger
+    logging.getLogger("tinygen").setLevel(getenv("LOG_LEVEL", logging.INFO).upper())
 
     # Instantiate dependencies
     assistant = Assistant()
@@ -114,7 +116,7 @@ async def generate_diff(
 
     # TODO: Store inputs and outputs
     # Store query inputs
-    query = queries.insert(Query(request.repoUrl, request.prompt))
+    query = queries.insert(Query(repo_url=request.repoUrl, prompt=request.prompt))
 
     repo = Repo(request.repoUrl)
 
@@ -124,7 +126,7 @@ async def generate_diff(
 
     # clone_repo(request.repoUrl, repo_dir)
 
-    file_content = repo.read_files(request.file_paths)
+    file_content = repo.read_all_files(request)
 
     generated_diff = get_diff(file_content, request.prompt, assistant)
 
