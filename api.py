@@ -103,7 +103,7 @@ def get_diff(
 
 # TODO: Include any HTTPExceptions?
 @app.post("/generate_diff")
-async def generate_diff_for_repo(
+async def generate_diff(
     request: PromptRequest,
     dependencies: ServiceDependencies = Depends(configure_service),
 ):
@@ -113,7 +113,8 @@ async def generate_diff_for_repo(
     # repo_dir = f"./repos/{os.path.basename(request.repoUrl).split('.')[0]}"
 
     # TODO: Store inputs and outputs
-    queries.insert()
+    # Store query inputs
+    query = queries.insert(Query(request.repoUrl, request.prompt))
 
     repo = Repo(request.repoUrl)
 
@@ -126,6 +127,9 @@ async def generate_diff_for_repo(
     file_content = repo.read_files(request.file_paths)
 
     generated_diff = get_diff(file_content, request.prompt, assistant)
+
+    # Store query output
+    queries.update_diff_by_id(generated_diff, query.id)
 
     # Clean up repo after use
     # shutil.rmtree(repo.repo_dir)
