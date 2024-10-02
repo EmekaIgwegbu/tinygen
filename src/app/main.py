@@ -6,11 +6,11 @@ from pydantic import BaseModel
 from supabase import create_client, Client
 from fastapi.responses import JSONResponse
 from dotenv import load_dotenv
-from tinygen.enums.tinygen_environments import TinygenEnvironment
-from tinygen.entities.queries import Query, Queries
-from tinygen.helpers.assistant import Assistant
-from tinygen.helpers.environment import getenv
-from tinygen.helpers.repo import Repo
+from app.enums.tinygen_environments import TinygenEnvironment
+from app.entities.queries import Query, Queries
+from app.helpers.assistant import Assistant
+from app.helpers.environment import getenv
+from app.helpers.repo import Repo
 
 app = FastAPI()
 
@@ -43,22 +43,20 @@ def configure_service() -> ServiceDependencies:
     openai.api_key = getenv("OPENAI_API_KEY")
 
     # Configure supabase db client
-    supabase_url = getenv("SUPABASE_URL")
-    supabase_key = getenv("SUPABASE_KEY")
-    supabase_client: Client = create_client(supabase_url, supabase_key)
+    supabase_client: Client = create_client(getenv("SUPABASE_URL"), getenv("SUPABASE_KEY"))
 
     # Configure global root logger
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",  # Log format
         handlers=[
-            logging.FileHandler("app.log"),
+            logging.FileHandler("logs/app.log"),
             logging.StreamHandler(),
         ],
     )
 
-    # Configure tinygen root logger
-    logging.getLogger("tinygen").setLevel(getenv("LOG_LEVEL", logging.INFO).upper())
+    # Configure app root logger
+    logging.getLogger("app").setLevel(getenv("LOG_LEVEL", logging.INFO).upper())
 
     # Instantiate dependencies
     assistant = Assistant()

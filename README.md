@@ -1,4 +1,4 @@
-# tinygen
+# TinyGen
 
 ## Overview
 A trivial version of CodeGen
@@ -15,7 +15,7 @@ To create a virtual python environment run the following command in your termina
 python -m venv env
 ```
 
-Then activate virtual environment using:
+Then activate the virtual environment using:
 ```bash
 source env/bin/activate
 ```

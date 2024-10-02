@@ -1,7 +1,7 @@
 from pydantic import BaseModel
 from datetime import datetime
 from supabase import Client
-from tinygen.exceptions.database_error import DatabaseError
+from app.exceptions.database_error import DatabaseError
 import logging
 
 logger = logging.getLogger(__name__)

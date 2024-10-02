@@ -1,5 +1,4 @@
 .env.secrets
-env
 *.log
 *.DS_store
 repos
