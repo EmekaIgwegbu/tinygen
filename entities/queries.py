@@ -1,7 +1,6 @@
 from pydantic import BaseModel
 from datetime import datetime
 from supabase import Client
-from typing import Optional
 from tinygen.exceptions.database_error import DatabaseError
 import logging
 
@@ -12,7 +11,7 @@ class Query(BaseModel):
     id: int = 0
     repo_url: str
     prompt: str
-    diff: Optional[str] = None
+    diff: str | None = None
     created_utc: datetime = None
     updated_utc: datetime = None
 

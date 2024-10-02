@@ -2,7 +2,6 @@ import git
 import hashlib
 import logging
 import os
-from typing import Optional
 from urllib.parse import urlparse
 from tinygen.exceptions.repo_error import RepoError
 
@@ -85,7 +84,7 @@ class Repo:
 
         return file_content
 
-    def read_files(self, file_paths: Optional[list[str]]) -> dict[str, str]:
+    def read_files(self, file_paths: list[str] | None) -> dict[str, str]:
         """Reads the files specified in file_paths. If file_paths is empty or None then
         all code files in the repo are read."""
         file_content = {}

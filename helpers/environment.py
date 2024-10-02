@@ -1,8 +1,7 @@
 import os
-from typing import Optional
 
 
-def getenv(key: str, default=None) -> Optional[str]:
+def getenv(key: str, default=None) -> str | None:
     env = os.getenv(key)
     if env == "" or env is None:
         return default
