@@ -2,6 +2,7 @@ import git
 import hashlib
 import logging
 import os
+from typing import Optional
 from urllib.parse import urlparse
 from tinygen.exceptions.repo_error import RepoError
 
@@ -26,18 +27,16 @@ IGNORED_DIRECTORIES = {"node_modules", "vendor", ".git", "build", "dist"}
 
 
 class Repo:
-    def __init__(self, repo_url):
+    def __init__(self, repo_url: str):
         self.repo_url = repo_url
         # Generate a unique hash to avoid clashing repo directory names
-        url_hash = hashlib.sha256(urlparse(repo_url).encode()).hexdigest()[:10]
+        url_hash = hashlib.sha256(repo_url.encode()).hexdigest()[:6]
         self.repo_dir = f"./repos/{os.path.basename(repo_url).split('.')[0]}_{url_hash}"
-        self.repo = self.pull_latest(repo_url, self.repo_dir)
+        self.repo = self.pull_latest(repo_url)
 
     @staticmethod
     def __ignore_dir_path(dir_path: str) -> bool:
-        _, dir_name = os.path.split()
-        print(f"dir_path is {dir_path}")
-        print(f"dir_name is {dir_name}")
+        _, dir_name = os.path.split(dir_path)
         return dir_name in IGNORED_DIRECTORIES
 
     def pull_latest(self, repo_url: str) -> git.Repo:
@@ -57,15 +56,6 @@ class Repo:
                     message=f"Failed to pull from remote {self.repo_url}: {e}"
                 )
 
-    # TODO: edit this (may also include is_code_file) and use this somewhere
-    # def __should_skip_file(self, full_path: str, repo_dir: str) -> bool:
-    #     # Skip files based on directory
-
-    #     # Skip specific folders like 'node_modules' or '.git'
-    #     relative_path = os.path.relpath(full_path, repo_dir)
-    #     skip_folders = ["node_modules", "vendor", ".git", "build", "dist"]
-    #     return any(folder in relative_path for folder in skip_folders)
-
     @staticmethod
     def is_code_file(file_path: str) -> bool:
         # Check if the file has a valid code extension
@@ -81,7 +71,7 @@ class Repo:
                 continue
 
             for file in file_names:
-                full_path = os.path.join(dir, file)
+                full_path = os.path.join(dir_path, file)
                 if Repo.is_code_file(full_path):
                     try:
                         with open(full_path, "r") as file:
@@ -93,7 +83,9 @@ class Repo:
                             message=f"Could not read file {full_path}: {str(e)}",
                         )
 
-    def read_files(self, file_paths: list[str] | None) -> dict[str, str]:
+        return file_content
+
+    def read_files(self, file_paths: Optional[list[str]]) -> dict[str, str]:
         """Reads the files specified in file_paths. If file_paths is empty or None then
         all code files in the repo are read."""
         file_content = {}

@@ -1,5 +1,3 @@
-# import os
-# import shutil
 import uvicorn
 import logging
 import openai
@@ -112,29 +110,18 @@ async def generate_diff(
     assistant = dependencies.assistant
     queries = dependencies.queries
 
-    # repo_dir = f"./repos/{os.path.basename(request.repoUrl).split('.')[0]}"
-
-    # TODO: Store inputs and outputs
     # Store query inputs
     query = queries.insert(Query(repo_url=request.repoUrl, prompt=request.prompt))
 
+    # Pull latest from remote repo and store on local disk
     repo = Repo(request.repoUrl)
 
-    # Clean up any previous repository with the same name
-    # if os.path.exists(repo.repo_dir):
-    #     shutil.rmtree(repo.repo_dir)
-
-    # clone_repo(request.repoUrl, repo_dir)
-
-    file_content = repo.read_all_files(request)
+    file_content = repo.read_all_files()
 
     generated_diff = get_diff(file_content, request.prompt, assistant)
 
-    # Store query output
+    # Store query output (diff)
     queries.update_diff_by_id(generated_diff, query.id)
-
-    # Clean up repo after use
-    # shutil.rmtree(repo.repo_dir)
 
     return JSONResponse(content={"diff": generated_diff})
 

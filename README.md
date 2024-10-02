@@ -23,3 +23,6 @@ You'll need to define the following secrets in a .env.secrets file at the root o
 - SUPABASE_KEY
 
 Reach out to emeka.igwegbu@gmail.com for these secrets.
+
+### 4. Run the service
+#TODO
