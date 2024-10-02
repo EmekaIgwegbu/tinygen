@@ -3,3 +3,4 @@ env
 *.log
 *.DS_store
 repos
+*__pycache__

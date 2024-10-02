@@ -2,7 +2,6 @@ import git
 import hashlib
 import logging
 import os
-from urllib.parse import urlparse
 from tinygen.exceptions.repo_error import RepoError
 
 logger = logging.getLogger(__name__)
