@@ -1,3 +1,4 @@
+import os
 import uvicorn
 import logging
 import openai
@@ -46,6 +47,7 @@ def configure_service() -> ServiceDependencies:
     supabase_client: Client = create_client(getenv("SUPABASE_URL"), getenv("SUPABASE_KEY"))
 
     # Configure global root logger
+    os.makedirs("logs", exist_ok=True)
     logging.basicConfig(
         level=logging.INFO,
         format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",  # Log format

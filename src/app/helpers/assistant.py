@@ -25,5 +25,5 @@ class Assistant:
 
         return assistant_message
 
-    def delete_chat_history(self):
+    def erase_chat_history(self):
         self.chat_history = []
