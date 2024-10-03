@@ -6,8 +6,6 @@ from fastapi import FastAPI, Depends, HTTPException
 from pydantic import BaseModel
 from supabase import create_client, Client
 from fastapi.responses import JSONResponse
-from dotenv import load_dotenv
-from app.enums.tinygen_environments import TinygenEnvironment
 from app.entities.queries import Query, Queries
 from app.helpers.assistant import Assistant
 from app.helpers.environment import getenv
@@ -29,22 +27,13 @@ class PromptRequest(BaseModel):
 
 
 def configure_service() -> ServiceDependencies:
-    # TODO: Will have to figure out where to set this env var
-    tinygen_environment = TinygenEnvironment(
-        getenv("TINYGEN_ENVIRONMENT", default=TinygenEnvironment.Production.value)
-    )
-
-    # Load environment variables and secrets from .env files
-    load_dotenv()
-    load_dotenv(dotenv_path=".env.secrets")
-    if tinygen_environment == TinygenEnvironment.Development:
-        load_dotenv(dotenv_path=".env.development", override=True)
-
     # Configure openai client
     openai.api_key = getenv("OPENAI_API_KEY")
 
     # Configure supabase db client
-    supabase_client: Client = create_client(getenv("SUPABASE_URL"), getenv("SUPABASE_KEY"))
+    supabase_client: Client = create_client(
+        getenv("SUPABASE_URL"), getenv("SUPABASE_KEY")
+    )
 
     # Configure global root logger
     os.makedirs("logs", exist_ok=True)
