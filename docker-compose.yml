@@ -4,7 +4,7 @@ services:
       context: .
     container_name: app
     env_file:
-      - ${ENV_FILE} # .env for production or .env.development for dev environment
+      - ${ENV_FILE:-.env} # .env for prod environment, .env.development for dev environment
       - .env.secrets
     volumes:
       - .:/tinygen

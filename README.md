@@ -5,27 +5,19 @@ A trivial version of CodeGen
 
 ## Getting Started
 
-### Prerequisities
-Install `poetry` on mac using:
-```bash
-brew install poetry
-```
-
-### 1. Install dependencies
-Install the required libraries by running the following command in your terminal at the root of this repo:
-```bash
-poetry install
-```
-
-### 2. Environment
+### 1. Environment
 You'll need to define the following secrets in a .env.secrets file at the root of this repo:
 - `OPENAI_API_KEY`
 - `SUPABASE_KEY`
 
+Consider setting `ENV_FILE` to `.env.development` to configure the service for the dev environment. This value defaults to `.env` for production.
+
 Reach out to emeka.igwegbu@gmail.com for secret keys.
 
-### 3. Run the service
+### 2. Run the service
 Run the service locally using
 ```bash
-poetry run uvicorn app.main:app
+docker-compose up
 ```
+
+The service runs on port 8000 by default. To run the service on a different port, update the port mapping in the docker-compose.yml file.
