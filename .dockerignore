@@ -2,3 +2,5 @@ README.md
 logs/
 repos/
 .env*
+*.DS_store
+*__pycache__
