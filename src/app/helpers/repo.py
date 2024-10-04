@@ -1,10 +1,7 @@
 import git
 import hashlib
-import logging
 import os
 from app.exceptions.repo_error import RepoError
-
-logger = logging.getLogger(__name__)
 
 CODE_FILE_EXTENSIONS = {
     ".py",
@@ -110,3 +107,11 @@ class Repo:
                     )
 
         return file_content
+
+    # TODO
+    def write_to_files(file_content: dict[str, str]):
+        raise NotImplementedError
+
+    # TODO
+    def get_diff():
+        raise NotImplementedError

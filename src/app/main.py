@@ -58,8 +58,11 @@ def configure_service() -> ServiceDependencies:
 
 
 # TODO: Consider refactoring this somewhere else
-def get_diff(
-    original_file_content: dict, user_prompt: str, assistant: Assistant
+def generate_code_changes(
+    original_file_content: dict,
+    user_prompt: str,
+    assistant: Assistant,
+    logger: logging.Logger,
 ) -> str:
     file_text = "\n\n".join(
         [
@@ -75,16 +78,17 @@ def get_diff(
         The user has said the following:
         {user_prompt}
 
-        Please return a unified diff showing any required changes to the files."""
+        Make any required changes to the files. Return your answer as a JSON-formatted string where the filepath (relative to the repo root) is mapped to the resulting code."""
 
-    reflection_prompt = """Are you sure, or would you like to correct your answer? If you're sure say 'y', otherwise give me the revised unified diff.
-        If you revise your answer then don't include an apology - aim to keep your response concise."""
+    reflection_prompt = """Would you like to improve on the generated code? Any bug fixes or optimizations? If not say 'n'. Otherwise, make any required changes to your original output."""
 
     assistant_response = assistant.chat(diff_prompt)
 
+    logger.debug(f"Original assistant response: {assistant_response}")
+
     assistant_reflection = assistant.chat(reflection_prompt)
 
-    if assistant_reflection.lower() == "y":
+    if assistant_reflection.lower() == "n":
         return assistant_response
 
     return assistant_reflection
@@ -98,21 +102,27 @@ async def generate_diff(
 ):
     assistant = dependencies.assistant
     queries = dependencies.queries
+    logger = dependencies.logger
 
     # Store query inputs
-    query = queries.insert(Query(repo_url=request.repoUrl, prompt=request.prompt))
+    # query = queries.insert(Query(repo_url=request.repoUrl, prompt=request.prompt))
 
-    # Pull latest from remote repo and store on local disk
+    # Pull latest changes from remote repo and write to file system
     repo = Repo(request.repoUrl)
 
     file_content = repo.read_all_files()
 
-    generated_diff = get_diff(file_content, request.prompt, assistant)
+    code_changes = generate_code_changes(
+        file_content, request.prompt, assistant, logger
+    )
+
+    repo.write_to_files(code_changes)
+    diff = repo.get_diff()
 
     # Store query output (diff)
-    queries.update_diff_by_id(generated_diff, query.id)
+    # queries.update_diff_by_id(diff, query.id)
 
-    return JSONResponse(content={"diff": generated_diff})
+    return JSONResponse(content={"diff": diff})
 
 
 if __name__ == "__main__":
